@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"suroot.win","root":"/","scheme":"Gemini","version":"8.0.0-rc.3","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="最近公司网站发现了XSS漏洞，研究了下，分享如下。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XSS漏洞解决方案（过滤器-包装器）">
+<meta property="og:url" content="http://suroot.win/2016/09/20/java-XSS%E6%BC%8F%E6%B4%9E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%88%E8%BF%87%E6%BB%A4%E5%99%A8-%E5%8C%85%E8%A3%85%E5%99%A8%EF%BC%89/index.html">
+<meta property="og:site_name" content="stone&#39;s blog">
+<meta property="og:description" content="最近公司网站发现了XSS漏洞，研究了下，分享如下。">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2007394-043cb8749933d314.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="article:published_time" content="2016-09-20T09:59:44.000Z">
+<meta property="article:modified_time" content="2020-06-04T14:28:31.580Z">
+<meta property="article:author" content="钱磊">
+<meta property="article:tag" content="java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/2007394-043cb8749933d314.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+<link rel="canonical" href="http://suroot.win/2016/09/20/java-XSS%E6%BC%8F%E6%B4%9E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%88%E8%BF%87%E6%BB%A4%E5%99%A8-%E5%8C%85%E8%A3%85%E5%99%A8%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>XSS漏洞解决方案（过滤器-包装器） | stone's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line toggle-line-first"></span>
+        <span class="toggle-line toggle-line-middle"></span>
+        <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">stone's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">钱磊的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">54</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://suroot.win/2016/09/20/java-XSS%E6%BC%8F%E6%B4%9E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%88%E8%BF%87%E6%BB%A4%E5%99%A8-%E5%8C%85%E8%A3%85%E5%99%A8%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="钱磊">
+      <meta itemprop="description" content="早睡早起">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="stone's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          XSS漏洞解决方案（过滤器-包装器）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2016-09-20 17:59:44" itemprop="dateCreated datePublished" datetime="2016-09-20T17:59:44+08:00">2016-09-20</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-06-04 22:28:31" itemprop="dateModified" datetime="2020-06-04T22:28:31+08:00">2020-06-04</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2016/09/20/java-XSS%E6%BC%8F%E6%B4%9E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%88%E8%BF%87%E6%BB%A4%E5%99%A8-%E5%8C%85%E8%A3%85%E5%99%A8%EF%BC%89/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/09/20/java-XSS漏洞解决方案（过滤器-包装器）/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近公司网站发现了XSS漏洞，研究了下，分享如下。</p>
+<a id="more"></a>
+<h3 id="一、XSS扫盲"><a href="#一、XSS扫盲" class="headerlink" title="一、XSS扫盲"></a>一、XSS扫盲</h3><blockquote>
+<p><a href="http://baike.baidu.com/view/2633667.htm" target="_blank" rel="noopener">跨站脚本攻击</a>(Cross Site Scripting)，为不和<a href="http://baike.baidu.com/view/728238.htm" target="_blank" rel="noopener">层叠样式表</a>(Cascading Style Sheets, <a href="http://baike.baidu.com/subview/15916/5236733.htm" target="_blank" rel="noopener">CSS</a>)的缩写混淆，故将跨站脚本攻击缩写为XSS。恶意攻击者往Web页面里插入恶意Script代码，当用户浏览该页之时，嵌入其中Web里面的Script代码会被执行，从而达到恶意攻击用户的特殊目的。</p>
+</blockquote>
+<p>1)恶意用户，在一些公共区域（例如，建议提交表单或消息公共板的输入表单）输入一些文本，这些文本被其它用户看到，但这些文本不仅仅是他们要输入的文本，同时还包括一些可以在客户端执行的脚本。<br>2)恶意提交这个表单。<br>3）其他用户看到这个包括恶意脚本的页面并执行，获取用户的cookie等敏感信息。<br><img src="http://upload-images.jianshu.io/upload_images/2007394-043cb8749933d314.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Paste_Image.png">  </p>
+<h3 id="二、解决方案"><a href="#二、解决方案" class="headerlink" title="二、解决方案"></a>二、解决方案</h3><h4 id="1-建立HttpServletRequestWapper的包装类"><a href="#1-建立HttpServletRequestWapper的包装类" class="headerlink" title="1.建立HttpServletRequestWapper的包装类**"></a>1.建立HttpServletRequestWapper的包装类**</h4><p>包装类是对用户发送的请求进行包装，把request中包含XSS代码过滤。</p>
+<pre><code>import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;  
+import javax.servlet.http.HttpServletRequestWrapper;  
+
+public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {  
+    HttpServletRequest orgRequest = null;  
+
+    public XssHttpServletRequestWrapper(HttpServletRequest request) {  
+        super(request);
+    }  
+    /** 
+     * 覆盖getParameter方法，将参数名和参数值都做xss过滤。
+     * 如果需要获得原始的值，则通过super.getParameterValues(name)来获取
+     * getParameterNames,getParameterValues和getParameterMap也可能需要覆盖 
+     */  
+    @Override  
+    public String getParameter(String name) {  
+        String value = super.getParameter(xssEncode(name));  
+        if (value != null) {  
+            value = xssEncode(value);  
+        }  
+        return value;  
+    }
+    @Override
+    public String[] getParameterValues(String name) {
+        String[] value = super.getParameterValues(name);
+        if(value != null){
+            for (int i = 0; i &lt; value.length; i++) {
+                value[i] = xssEncode(value[i]);
+            }
+        }
+        return value;
+    }
+    @Override
+    public Map getParameterMap() {
+        // TODO Auto-generated method stub
+        return super.getParameterMap();
+    }
+
+    /** 
+     * 覆盖getHeader方法，将参数名和参数值都做xss过滤。
+     * 如果需要获得原始的值，则通过super.getHeaders(name)来获取 
+     * getHeaderNames 也可能需要覆盖 
+     */  
+    @Override  
+    public String getHeader(String name) {  
+
+        String value = super.getHeader(xssEncode(name));  
+        if (value != null) {  
+            value = xssEncode(value);  
+        }  
+        return value;  
+    }  
+
+    /** 
+     * 将容易引起xss漏洞的半角字符直接替换成全角字符 在保证不删除数据的情况下保存
+     * @param s 
+     * @return 过滤后的值
+     */  
+    private static String xssEncode(String s) {  
+        if (s == null || s.isEmpty()) {  
+            return s;  
+        }  
+        StringBuilder sb = new StringBuilder(s.length() + 16);  
+        for (int i = 0; i &lt; s.length(); i++) {  
+            char ch = s.charAt(i);
+            switch (ch) {
+            case &apos;&amp;&apos;:
+                sb.append(&quot;＆&quot;);
+                break;
+            case &apos;&lt;&apos;:
+                sb.append(&quot;《&quot;);
+                break;
+            case &apos;&gt;&apos;:
+                sb.append(&quot;》&quot;);
+                break;
+            case &apos;&quot;&apos;:
+                sb.append(&quot;“&quot;);
+                break;
+            case &apos;\&apos;&apos;:
+                sb.append(&quot;＼&quot;);
+                break;
+            case &apos;/&apos;:
+                sb.append(&quot;／&quot;);
+                break;
+            default:
+                sb.append(ch);
+            }
+        }  
+        return sb.toString();  
+    }  
+}  </code></pre><h4 id="2-Filter过滤器实现对Request的过滤"><a href="#2-Filter过滤器实现对Request的过滤" class="headerlink" title="2.Filter过滤器实现对Request的过滤"></a>2.Filter过滤器实现对Request的过滤</h4><pre><code>import java.io.IOException;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+
+import com.lyms.wxyl.base.wrapper.XssHttpServletRequestWrapper;
+
+public class XssFilter implements Filter {
+
+    public void destroy() {
+        // TODO Auto-generated method stub
+    }
+    /**
+     * 过滤器用来过滤的方法
+     */
+    public void doFilter(ServletRequest request, ServletResponse response,FilterChain chain) throws IOException, ServletException {
+        //包装request
+        XssHttpServletRequestWrapper xssRequest = new XssHttpServletRequestWrapper((HttpServletRequest) request);
+        chain.doFilter(xssRequest, response);
+    }
+    public void init(FilterConfig filterConfig) throws ServletException {
+        // TODO Auto-generated method stub
+    }
+}</code></pre><h4 id="3-在web-xml中定义好Filter"><a href="#3-在web-xml中定义好Filter" class="headerlink" title="3.在web.xml中定义好Filter"></a>3.在web.xml中定义好Filter</h4><pre><code>&lt;filter&gt;
+    &lt;filter-name&gt;XssFilter&lt;/filter-name&gt;
+    &lt;filter-class&gt;top.suroot.base.filter.XssFilter&lt;/filter-class&gt;
+&lt;/filter&gt;
+&lt;filter-mapping&gt;
+    &lt;filter-name&gt;XssFilter&lt;/filter-name&gt;
+    &lt;url-pattern&gt;/*&lt;/url-pattern&gt;
+&lt;/filter-mapping&gt;</code></pre><p>以上是解决办法，打断点进行调试把，你会看到Filter和Wrapper详细的工作流程。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/09/20/java-poi%E5%AF%BC%E5%87%BAExcel%E6%B7%BB%E5%8A%A0%E8%AF%BB%E5%8F%96%E6%96%87%E4%BB%B6%E5%B1%9E%E6%80%A7/" rel="prev" title="poi导出Excel添加/读取文件属性">
+      <i class="fa fa-chevron-left"></i> poi导出Excel添加/读取文件属性
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/09/22/java-Poi%E5%AF%BC%E5%87%BAExcel%E6%8F%92%E5%85%A5%E6%96%87%E6%9C%AC%E6%A1%86%EF%BC%88TextBox%EF%BC%89/" rel="next" title="Poi导出Excel插入文本框（TextBox）">
+      Poi导出Excel插入文本框（TextBox） <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、XSS扫盲"><span class="nav-number">1.</span> <span class="nav-text">一、XSS扫盲</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、解决方案"><span class="nav-number">2.</span> <span class="nav-text">二、解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-建立HttpServletRequestWapper的包装类"><span class="nav-number">2.1.</span> <span class="nav-text">1.建立HttpServletRequestWapper的包装类**</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Filter过滤器实现对Request的过滤"><span class="nav-number">2.2.</span> <span class="nav-text">2.Filter过滤器实现对Request的过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-在web-xml中定义好Filter"><span class="nav-number">2.3.</span> <span class="nav-text">3.在web.xml中定义好Filter</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="钱磊"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">钱磊</p>
+  <div class="site-description" itemprop="description">早睡早起</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/onlinelei" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;onlinelei" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:suqianlei@gmail.com" title="E-Mail → mailto:suqianlei@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/suqianlei" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;suqianlei" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">钱磊</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://suqianlei.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://suroot.win/2016/09/20/java-XSS%E6%BC%8F%E6%B4%9E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%88%E8%BF%87%E6%BB%A4%E5%99%A8-%E5%8C%85%E8%A3%85%E5%99%A8%EF%BC%89/";
+    this.page.identifier = "2016/09/20/java-XSS漏洞解决方案（过滤器-包装器）/";
+    this.page.title = "XSS漏洞解决方案（过滤器-包装器）";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://suqianlei.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

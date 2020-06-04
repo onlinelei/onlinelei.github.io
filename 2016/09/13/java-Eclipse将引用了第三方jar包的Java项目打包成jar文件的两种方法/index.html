@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"suroot.win","root":"/","scheme":"Gemini","version":"8.0.0-rc.3","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="如果想把自己的项目打成一个jar文件用cmd在有java运行环境的机器上执行，那么就可以将自己的项目打成jar包，但是如果项目中使用到了第三方的jar包怎么把这些jar文件也一起打包呢。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Eclipse将引用了第三方jar包的Java项目打包成jar文件的两种方法">
+<meta property="og:url" content="http://suroot.win/2016/09/13/java-Eclipse%E5%B0%86%E5%BC%95%E7%94%A8%E4%BA%86%E7%AC%AC%E4%B8%89%E6%96%B9jar%E5%8C%85%E7%9A%84Java%E9%A1%B9%E7%9B%AE%E6%89%93%E5%8C%85%E6%88%90jar%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95/index.html">
+<meta property="og:site_name" content="stone&#39;s blog">
+<meta property="og:description" content="如果想把自己的项目打成一个jar文件用cmd在有java运行环境的机器上执行，那么就可以将自己的项目打成jar包，但是如果项目中使用到了第三方的jar包怎么把这些jar文件也一起打包呢。">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2007394-8f30bfe639c516f6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2007394-7687b4f47f4034e7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2007394-5600aaee85622983.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2007394-478bbae521be3aef.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2007394-1ae0832aa3c31b2a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2007394-75e1b5bb88e3c252.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="http://upload-images.jianshu.io/upload_images/2007394-a484009906b19c44.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="article:published_time" content="2016-09-13T09:59:44.000Z">
+<meta property="article:modified_time" content="2020-06-04T14:28:31.569Z">
+<meta property="article:author" content="钱磊">
+<meta property="article:tag" content="java">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://upload-images.jianshu.io/upload_images/2007394-8f30bfe639c516f6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+
+<link rel="canonical" href="http://suroot.win/2016/09/13/java-Eclipse%E5%B0%86%E5%BC%95%E7%94%A8%E4%BA%86%E7%AC%AC%E4%B8%89%E6%96%B9jar%E5%8C%85%E7%9A%84Java%E9%A1%B9%E7%9B%AE%E6%89%93%E5%8C%85%E6%88%90jar%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Eclipse将引用了第三方jar包的Java项目打包成jar文件的两种方法 | stone's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line toggle-line-first"></span>
+        <span class="toggle-line toggle-line-middle"></span>
+        <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">stone's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">钱磊的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">54</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://suroot.win/2016/09/13/java-Eclipse%E5%B0%86%E5%BC%95%E7%94%A8%E4%BA%86%E7%AC%AC%E4%B8%89%E6%96%B9jar%E5%8C%85%E7%9A%84Java%E9%A1%B9%E7%9B%AE%E6%89%93%E5%8C%85%E6%88%90jar%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="钱磊">
+      <meta itemprop="description" content="早睡早起">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="stone's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Eclipse将引用了第三方jar包的Java项目打包成jar文件的两种方法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2016-09-13 17:59:44" itemprop="dateCreated datePublished" datetime="2016-09-13T17:59:44+08:00">2016-09-13</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-06-04 22:28:31" itemprop="dateModified" datetime="2020-06-04T22:28:31+08:00">2020-06-04</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2016/09/13/java-Eclipse%E5%B0%86%E5%BC%95%E7%94%A8%E4%BA%86%E7%AC%AC%E4%B8%89%E6%96%B9jar%E5%8C%85%E7%9A%84Java%E9%A1%B9%E7%9B%AE%E6%89%93%E5%8C%85%E6%88%90jar%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2016/09/13/java-Eclipse将引用了第三方jar包的Java项目打包成jar文件的两种方法/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>如果想把自己的项目打成一个jar文件用cmd在有java运行环境的机器上执行，那么就可以将自己的项目打成jar包，但是如果项目中使用到了第三方的jar包怎么把这些jar文件也一起打包呢。   </p>
+</blockquote>
+<a id="more"></a>
+<h3 id="方案一：用Eclipse自带的Export功能"><a href="#方案一：用Eclipse自带的Export功能" class="headerlink" title="方案一：用Eclipse自带的Export功能"></a>方案一：用Eclipse自带的Export功能</h3><h4 id="步骤1：准备主清单文件-“MANIFEST-MF”"><a href="#步骤1：准备主清单文件-“MANIFEST-MF”" class="headerlink" title="步骤1：准备主清单文件 “MANIFEST.MF”"></a>步骤1：准备主清单文件 “MANIFEST.MF”</h4><p>由于是打包引用了第三方jar包的Java项目，故需要自定义配置文件MANIFEST.MF，在该项目下建立文件MANIFEST.MF，<br>内容如下：  </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Manifest-Version: 1.0 </span><br><span class="line">Class-Path: lib&#x2F;commons-codec.jar lib&#x2F;commons-httpclient-3.1.jar  </span><br><span class="line">lib&#x2F;commons-logging-1.1.jar lib&#x2F;log4j-1.2.16.jar lib&#x2F;jackson-all-1.8.5.jar </span><br><span class="line">Main-Class: main.KillCheatFans</span><br></pre></td></tr></table></figure>
+<p>第一行是MAINIFEST的版本，第二行Class-Path就指定了外来jar包的位置，第三行指定我们要执行的MAIN java文件。</p>
+<p>这里要注意几点：   </p>
+<ol>
+<li>Class-Path: 和Main-Class: 后边都有一个空格，必须加上，否则会打包失败，错误提示为：Invalid header field； </li>
+<li>假设我们的项目打包后为KillCheatFans.jar，那么按照上面的定义，应该在 KillCheatFans.jar的同层目录下建立一个lib文件夹（即lib文件和打包的jar文件<br>在同一个目录下），并将相关的jar包放在里面。否则将会出现“Exception in thread “main” java.lang.NoClassDefFoundError”的错误； </li>
+<li>Main-Class后面是类的全地址，比如你的主文件是KillCheatFans.java，文件里打包为package com.main; 那么这里就写com.main.KillCheatFans，<br>不要加.java后缀，主文件地址写错将会出现“找不到或无法加载主类”的错误； </li>
+<li>写完Main-Class后一定要回车（即最后一行是空白行），让光标到下一行，这样你生成的jar包才能找到你的主class去运行，   </li>
+</ol>
+<p>否则将会出现“jar中没有主清单属性”的错误。</p>
+<h3 id="步骤2：右击Java工程选择Export—-gt-选择JAR-file—-gt-Next"><a href="#步骤2：右击Java工程选择Export—-gt-选择JAR-file—-gt-Next" class="headerlink" title="步骤2：右击Java工程选择Export—&gt;选择JAR file—&gt;Next"></a>步骤2：右击Java工程选择Export—&gt;选择JAR file—&gt;Next</h3><p><img src="http://upload-images.jianshu.io/upload_images/2007394-8f30bfe639c516f6.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Paste_Image.png"></p>
+<h3 id="步骤3：选择要打包的文件，不需要的文件不必打包，减小打包后的jar文件大小，并进行选项配置如下"><a href="#步骤3：选择要打包的文件，不需要的文件不必打包，减小打包后的jar文件大小，并进行选项配置如下" class="headerlink" title="步骤3：选择要打包的文件，不需要的文件不必打包，减小打包后的jar文件大小，并进行选项配置如下"></a>步骤3：选择要打包的文件，不需要的文件不必打包，减小打包后的jar文件大小，并进行选项配置如下</h3><p><img src="http://upload-images.jianshu.io/upload_images/2007394-7687b4f47f4034e7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Paste_Image.png"><br>这里有几个选项：</p>
+<blockquote>
+<ul>
+<li>Export generated class files and resources 表示只导出生成的.class文件和其他资源文件 </li>
+</ul>
+</blockquote>
+<ul>
+<li>Export all output folders for checked projects 表示导出选中项目的所有文件夹 </li>
+<li>Export java source file and resouces 表示导出的jar包中将包含你的源代码 *.java，如果你不想泄漏源代码，那么就不要选这项了 </li>
+<li>Export refactorings for checked projects 把一些重构的信息文件也包含进去<h3 id="步骤4：选择我们在第一步中自定义的配置文件路径，这一步很重要，不能采用默认选项"><a href="#步骤4：选择我们在第一步中自定义的配置文件路径，这一步很重要，不能采用默认选项" class="headerlink" title="步骤4：选择我们在第一步中自定义的配置文件路径，这一步很重要，不能采用默认选项"></a>步骤4：选择我们在第一步中自定义的配置文件路径，这一步很重要，不能采用默认选项</h3></li>
+</ul>
+<p><img src="http://upload-images.jianshu.io/upload_images/2007394-5600aaee85622983.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Paste_Image.png"><br>这里解释一下配置项：</p>
+<blockquote>
+<ul>
+<li>Generate the manifest file：是系统帮我们自动生成MANIFEST.MF文件，如果你的项目没有引用其他class-path，那可以选择这一项。 </li>
+</ul>
+</blockquote>
+<ul>
+<li>Use existing mainfest from workspace：这是可以选择我们自定义的.MF文件，格式如上所写，引用了第三方包时选用。 </li>
+<li>Seal content：要封装整个jar或者指定的包packet。 </li>
+<li>Main class：这里可以选择你的程序入口，将来打包出来的jar就是你这个入口类的执行结果。   </li>
+</ul>
+<p>最后Finish，即生成了我们要的jar文件。</p>
+<h3 id="方案二：安装Eclipse打包插件Fat-Jar"><a href="#方案二：安装Eclipse打包插件Fat-Jar" class="headerlink" title="方案二：安装Eclipse打包插件Fat Jar"></a>方案二：安装Eclipse打包插件Fat Jar</h3><p>方案一对于含有较多第三方jar文件或含有第三方图片资源等就显得不合适，太繁琐。这时可以使用一个打包的插件—Fat Jar。     Fat Jar Eclipse Plug-In是一个可以将Eclipse Java Project的所有资源打包进一个可执行jar文件的小工具，可以方便的完成各种打包任务，我们经常会来打jar包，但是eclipse自带的打包jar似乎不太够用，Fat Jar是eclipse的一个插件，特别是Fat Jar可以打成可执行Jar包，并且在图片等其他资源、引用外包方面使用起来更方便。</p>
+<h3 id="安装方法："><a href="#安装方法：" class="headerlink" title="安装方法："></a>安装方法：</h3><h4 id="1-Eclipse在线更新方法"><a href="#1-Eclipse在线更新方法" class="headerlink" title="1. Eclipse在线更新方法"></a>1. Eclipse在线更新方法</h4><p>Help &gt; Install New Software &gt; Add，<br>name：Fat Jar<br>location：<a href="http://kurucz-grafika.de/fatjar" target="_blank" rel="noopener">http://kurucz-grafika.de/fatjar</a> </p>
+<h4 id="2-Eclipse插件手动安装方法下载地址："><a href="#2-Eclipse插件手动安装方法下载地址：" class="headerlink" title="2. Eclipse插件手动安装方法下载地址："></a>2. Eclipse插件手动安装方法下载地址：</h4><p><a href="http://downloads.sourceforge.net/fjep/net.sf.fjep.fatjar_0.0.27.zip?modtime=1195824818&amp;big_mirror=0" target="_blank" rel="noopener">http://downloads.sourceforge.net/fjep/net.sf.fjep.fatjar_0.0.27.zip?modtime=1195824818&amp;big_mirror=0</a><br>将解压出的plugins中的文件复制到eclipse安装目录中的plugins目录下，然后重启eclipse即可。 </p>
+<h4 id="使用方法："><a href="#使用方法：" class="headerlink" title="使用方法：**"></a>使用方法：**</h4><h5 id="步骤1：右击工程项目选择Buile-Fat-Jar"><a href="#步骤1：右击工程项目选择Buile-Fat-Jar" class="headerlink" title="步骤1：右击工程项目选择Buile Fat Jar"></a>步骤1：右击工程项目选择Buile Fat Jar</h5><p><img src="http://upload-images.jianshu.io/upload_images/2007394-478bbae521be3aef.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Paste_Image.png"></p>
+<h5 id="步骤2：配置jar文件存放目录，主Main文件等，如下图"><a href="#步骤2：配置jar文件存放目录，主Main文件等，如下图" class="headerlink" title="步骤2：配置jar文件存放目录，主Main文件等，如下图"></a>步骤2：配置jar文件存放目录，主Main文件等，如下图</h5><p><img src="http://upload-images.jianshu.io/upload_images/2007394-1ae0832aa3c31b2a.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Paste_Image.png"></p>
+<h5 id="步骤3：选择所要用到的第三方jar包"><a href="#步骤3：选择所要用到的第三方jar包" class="headerlink" title="步骤3：选择所要用到的第三方jar包"></a>步骤3：选择所要用到的第三方jar包</h5><p><img src="http://upload-images.jianshu.io/upload_images/2007394-75e1b5bb88e3c252.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Paste_Image.png"><br>最后Finish，即生成了我们要的jar文件，十分方便。</p>
+<h3 id="运行该jar文件有两种方式："><a href="#运行该jar文件有两种方式：" class="headerlink" title="运行该jar文件有两种方式："></a>运行该jar文件有两种方式：</h3><h5 id="1-在命令行下运行命令java-jar-你的jar文件名称，比如我的执行如下："><a href="#1-在命令行下运行命令java-jar-你的jar文件名称，比如我的执行如下：" class="headerlink" title="1. 在命令行下运行命令java -jar 你的jar文件名称，比如我的执行如下："></a>1. 在命令行下运行命令java -jar 你的jar文件名称，比如我的执行如下：</h5><p><img src="http://upload-images.jianshu.io/upload_images/2007394-a484009906b19c44.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="Paste_Image.png"><br>如果在jar中有一些System.out.prinln语句（如上执行结果），运行后不想在控制台输出而是保存在文件中方便以后查看，可以用一下命令：java -jar KillCheatFans.jar &gt; log.txt （这时命令行窗口不会有任何输出）输出信息会被打印到log.txt中，当然log.txt自动生成，并位于和KillCheatFans.jar一个目录中。</p>
+<h5 id="2-新建一个批处理文件，如start-bat，内容为：java-jar-KillCheatFans-jar，放在jar文件同一目录下即可，以后点击自动运行即可，更加方便。"><a href="#2-新建一个批处理文件，如start-bat，内容为：java-jar-KillCheatFans-jar，放在jar文件同一目录下即可，以后点击自动运行即可，更加方便。" class="headerlink" title="2. 新建一个批处理文件，如start.bat，内容为：java -jar KillCheatFans.jar，放在jar文件同一目录下即可，以后点击自动运行即可，更加方便。"></a>2. 新建一个批处理文件，如start.bat，内容为：java -jar KillCheatFans.jar，放在jar文件同一目录下即可，以后点击自动运行即可，更加方便。</h5><blockquote>
+<p>原文地址：<a href="http://www.cnblogs.com/lanxuezaipiao/p/3291641.html" target="_blank" rel="noopener">http://www.cnblogs.com/lanxuezaipiao/p/3291641.html</a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/java/" rel="tag"># java</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2016/09/11/java-jxl%E6%8A%A5%E8%A1%A8%E6%8F%92%E4%BB%B6/" rel="prev" title="jxl报表插件">
+      <i class="fa fa-chevron-left"></i> jxl报表插件
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2016/09/15/java-SpringMVC%E4%B8%AD%E4%BD%BF%E7%94%A8Interceptor%E6%8B%A6%E6%88%AA%E5%99%A8/" rel="next" title="SpringMVC中使用Interceptor拦截器">
+      SpringMVC中使用Interceptor拦截器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#方案一：用Eclipse自带的Export功能"><span class="nav-number">1.</span> <span class="nav-text">方案一：用Eclipse自带的Export功能</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#步骤1：准备主清单文件-“MANIFEST-MF”"><span class="nav-number">1.1.</span> <span class="nav-text">步骤1：准备主清单文件 “MANIFEST.MF”</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤2：右击Java工程选择Export—-gt-选择JAR-file—-gt-Next"><span class="nav-number">2.</span> <span class="nav-text">步骤2：右击Java工程选择Export—&gt;选择JAR file—&gt;Next</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤3：选择要打包的文件，不需要的文件不必打包，减小打包后的jar文件大小，并进行选项配置如下"><span class="nav-number">3.</span> <span class="nav-text">步骤3：选择要打包的文件，不需要的文件不必打包，减小打包后的jar文件大小，并进行选项配置如下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#步骤4：选择我们在第一步中自定义的配置文件路径，这一步很重要，不能采用默认选项"><span class="nav-number">4.</span> <span class="nav-text">步骤4：选择我们在第一步中自定义的配置文件路径，这一步很重要，不能采用默认选项</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#方案二：安装Eclipse打包插件Fat-Jar"><span class="nav-number">5.</span> <span class="nav-text">方案二：安装Eclipse打包插件Fat Jar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安装方法："><span class="nav-number">6.</span> <span class="nav-text">安装方法：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Eclipse在线更新方法"><span class="nav-number">6.1.</span> <span class="nav-text">1. Eclipse在线更新方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Eclipse插件手动安装方法下载地址："><span class="nav-number">6.2.</span> <span class="nav-text">2. Eclipse插件手动安装方法下载地址：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用方法："><span class="nav-number">6.3.</span> <span class="nav-text">使用方法：**</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#步骤1：右击工程项目选择Buile-Fat-Jar"><span class="nav-number">6.3.1.</span> <span class="nav-text">步骤1：右击工程项目选择Buile Fat Jar</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#步骤2：配置jar文件存放目录，主Main文件等，如下图"><span class="nav-number">6.3.2.</span> <span class="nav-text">步骤2：配置jar文件存放目录，主Main文件等，如下图</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#步骤3：选择所要用到的第三方jar包"><span class="nav-number">6.3.3.</span> <span class="nav-text">步骤3：选择所要用到的第三方jar包</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#运行该jar文件有两种方式："><span class="nav-number">7.</span> <span class="nav-text">运行该jar文件有两种方式：</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-在命令行下运行命令java-jar-你的jar文件名称，比如我的执行如下："><span class="nav-number">7.0.1.</span> <span class="nav-text">1. 在命令行下运行命令java -jar 你的jar文件名称，比如我的执行如下：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-新建一个批处理文件，如start-bat，内容为：java-jar-KillCheatFans-jar，放在jar文件同一目录下即可，以后点击自动运行即可，更加方便。"><span class="nav-number">7.0.2.</span> <span class="nav-text">2. 新建一个批处理文件，如start.bat，内容为：java -jar KillCheatFans.jar，放在jar文件同一目录下即可，以后点击自动运行即可，更加方便。</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="钱磊"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">钱磊</p>
+  <div class="site-description" itemprop="description">早睡早起</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/onlinelei" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;onlinelei" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:suqianlei@gmail.com" title="E-Mail → mailto:suqianlei@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/suqianlei" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;suqianlei" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">钱磊</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://suqianlei.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://suroot.win/2016/09/13/java-Eclipse%E5%B0%86%E5%BC%95%E7%94%A8%E4%BA%86%E7%AC%AC%E4%B8%89%E6%96%B9jar%E5%8C%85%E7%9A%84Java%E9%A1%B9%E7%9B%AE%E6%89%93%E5%8C%85%E6%88%90jar%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95/";
+    this.page.identifier = "2016/09/13/java-Eclipse将引用了第三方jar包的Java项目打包成jar文件的两种方法/";
+    this.page.title = "Eclipse将引用了第三方jar包的Java项目打包成jar文件的两种方法";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://suqianlei.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

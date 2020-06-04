@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"suroot.win","root":"/","scheme":"Gemini","version":"8.0.0-rc.3","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="一、API 方式新增调度器xxlJob文档中 5.11.2提供了可以Api的方式对调度中心进行控制，原文如下：  5.11.2 提供给业务的API服务：1.任务列表查询；2.任务新增；3.任务更新；4.任务删除；5.任务启动；6.任务停止；7.任务触发；API服务位置：com.xxl.job.admin.controller.JobInfoController.javaAPI服务请求参考代码：可参">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xxlJob:API 方式新增调度器">
+<meta property="og:url" content="http://suroot.win/2020/02/12/xxlJob-xxlJobAPI%E6%96%B0%E5%A2%9E%E8%B0%83%E5%BA%A6%E5%99%A8/index.html">
+<meta property="og:site_name" content="stone&#39;s blog">
+<meta property="og:description" content="一、API 方式新增调度器xxlJob文档中 5.11.2提供了可以Api的方式对调度中心进行控制，原文如下：  5.11.2 提供给业务的API服务：1.任务列表查询；2.任务新增；3.任务更新；4.任务删除；5.任务启动；6.任务停止；7.任务触发；API服务位置：com.xxl.job.admin.controller.JobInfoController.javaAPI服务请求参考代码：可参">
+<meta property="article:published_time" content="2020-02-12T08:20:57.000Z">
+<meta property="article:modified_time" content="2020-06-04T14:28:31.573Z">
+<meta property="article:author" content="钱磊">
+<meta property="article:tag" content="xxlJob">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://suroot.win/2020/02/12/xxlJob-xxlJobAPI%E6%96%B0%E5%A2%9E%E8%B0%83%E5%BA%A6%E5%99%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>xxlJob:API 方式新增调度器 | stone's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line toggle-line-first"></span>
+        <span class="toggle-line toggle-line-middle"></span>
+        <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">stone's blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">钱磊的博客</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags<span class="badge">17</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives<span class="badge">54</span></a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://suroot.win/2020/02/12/xxlJob-xxlJobAPI%E6%96%B0%E5%A2%9E%E8%B0%83%E5%BA%A6%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="钱磊">
+      <meta itemprop="description" content="早睡早起">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="stone's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          xxlJob:API 方式新增调度器
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-02-12 16:20:57" itemprop="dateCreated datePublished" datetime="2020-02-12T16:20:57+08:00">2020-02-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-06-04 22:28:31" itemprop="dateModified" datetime="2020-06-04T22:28:31+08:00">2020-06-04</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2020/02/12/xxlJob-xxlJobAPI%E6%96%B0%E5%A2%9E%E8%B0%83%E5%BA%A6%E5%99%A8/#disqus_thread" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2020/02/12/xxlJob-xxlJobAPI新增调度器/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="一、API-方式新增调度器"><a href="#一、API-方式新增调度器" class="headerlink" title="一、API 方式新增调度器"></a>一、API 方式新增调度器</h1><p>xxlJob文档中 5.11.2提供了可以Api的方式对调度中心进行控制，原文如下：</p>
+<blockquote>
+<p>5.11.2 提供给业务的API服务：<br>1.任务列表查询；<br>2.任务新增；<br>3.任务更新；<br>4.任务删除；<br>5.任务启动；<br>6.任务停止；<br>7.任务触发；<br>API服务位置：<code>com.xxl.job.admin.controller.JobInfoController.java</code><br>API服务请求参考代码：可参考任务界面操作的ajax请求。任何ajax接口均可配置成为API服务，只需在待启用的API服务上添加 <code>@PermissionLimit(limit = false)</code> 注解取消登陆态拦截即可；</p>
+</blockquote>
+<a id="more"></a>
+
+
+<h2 id="1-任务列表查询"><a href="#1-任务列表查询" class="headerlink" title="1.任务列表查询"></a>1.任务列表查询</h2><p>接口地址：/jobinfo/pageList<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobinfo/pageList" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobinfo/pageList</a></p>
+<p>请求参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">jobGroup: 4</span><br><span class="line">triggerStatus: -1</span><br><span class="line">jobDesc: </span><br><span class="line">executorHandler: </span><br><span class="line">author: </span><br><span class="line">start: 0</span><br><span class="line">length: 10</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-任务新增"><a href="#2-任务新增" class="headerlink" title="2. 任务新增"></a>2. 任务新增</h2><p>接口地址：/jobinfo/add<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobinfo/add" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobinfo/add</a></p>
+<p>请求参数：(标星为必填项)</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">jobGroup: 4  // * 执行器，需要查询到自己的执行器id</span><br><span class="line">jobDesc: 同步组织架构API 测试  // * 调度器描述信息</span><br><span class="line">executorRouteStrategy: FIRST // * 路由策略:(FIRST:第一个,LAST:最后一个,ROUND:轮询,RANDOM:随机,CONSISTENT_HASH:一致性HASH,LEAST_FREQUENTLY_USED:最不经常使用,LEAST_RECENTLY_USED:最近最久未使用,FAILOVER:故障转移,BUSYOVER:忙碌转移,SHARDING_BROADCAST:分片广播)</span><br><span class="line">cronGen_display: 0 0 1 * * ? // * Cron表达式</span><br><span class="line">jobCron: 0 0 1 * * ? // * Cron表达式</span><br><span class="line">glueType: BEAN  // * 运行模式(BEAN:BEAN,GLUE_GROOVY:GLUE(Java),GLUE_SHELL:GLUE(Shell),GLUE_PYTHON:GLUE(Python),GLUE_PHP:GLUE(PHP),GLUE_NODEJS:GLUE(Nodejs),GLUE_POWERSHELL:GLUE(PowerShell))</span><br><span class="line">executorHandler: syncOrganizationJobHandler	// * JobHandler</span><br><span class="line">executorBlockStrategy: SERIAL_EXECUTION // * 阻塞处理策略(SERIAL_EXECUTION:单机串行,DISCARD_LATER:丢弃后续调度,COVER_EARLY:覆盖之前调度)</span><br><span class="line">childJobId: // 子任务ID</span><br><span class="line">executorTimeout: 0 // 任务超时时间</span><br><span class="line">executorFailRetryCount: 0 // 失败重试次数</span><br><span class="line">author: qianlei // * 负责人</span><br><span class="line">alarmEmail: suqianlei@gmail.com // 报警邮件</span><br><span class="line">executorParam: 0 // 任务参数</span><br><span class="line">glueRemark: GLUE代码初始化 // </span><br><span class="line">glueSource: //</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="3-任务更新"><a href="#3-任务更新" class="headerlink" title="3. 任务更新"></a>3. 任务更新</h2><p>接口地址：/jobinfo/update<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobinfo/update" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobinfo/update</a></p>
+<p>请求参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">jobGroup: 4</span><br><span class="line">jobDesc: 同步组织架构API 测试</span><br><span class="line">executorRouteStrategy: FIRST</span><br><span class="line">cronGen_display: 0 0 1 * * ?</span><br><span class="line">jobCron: 0 0 1 * * ?</span><br><span class="line">executorHandler: syncOrganizationJobHandler	</span><br><span class="line">executorBlockStrategy: SERIAL_EXECUTION</span><br><span class="line">childJobId: </span><br><span class="line">executorTimeout: 0</span><br><span class="line">executorFailRetryCount: 0</span><br><span class="line">author: qianlei</span><br><span class="line">alarmEmail: suqianlei@gmail.com</span><br><span class="line">executorParam: 0</span><br><span class="line">id: 55</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="4-任务删除"><a href="#4-任务删除" class="headerlink" title="4. 任务删除"></a>4. 任务删除</h2><p>接口地址：/jobinfo/remove<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobinfo/remove" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobinfo/remove</a></p>
+<p>请求参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">id: 55</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="5-任务启动"><a href="#5-任务启动" class="headerlink" title="5.任务启动"></a>5.任务启动</h2><p>接口地址：/jobinfo/start<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobinfo/start" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobinfo/start</a></p>
+<p>请求参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">id: 55</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="6-任务停止"><a href="#6-任务停止" class="headerlink" title="6.任务停止"></a>6.任务停止</h2><p>接口地址：/jobinfo/stop<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobinfo/stop" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobinfo/stop</a></p>
+<p>请求参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">id: 55</span><br></pre></td></tr></table></figure>
+
+<h2 id="7-任务触发"><a href="#7-任务触发" class="headerlink" title="7.任务触发"></a>7.任务触发</h2><p>接口地址：/jobinfo/trigger<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobinfo/trigger" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobinfo/trigger</a></p>
+<p>请求参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">id: 55</span><br><span class="line">executorParam: 0</span><br></pre></td></tr></table></figure>
+
+<h2 id="8-其他接口"><a href="#8-其他接口" class="headerlink" title="8.其他接口"></a>8.其他接口</h2><h3 id="8-1查询注册节点"><a href="#8-1查询注册节点" class="headerlink" title="8.1查询注册节点"></a>8.1查询注册节点</h3><p>接口地址：/jobgroup/loadById<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobgroup/loadById" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobgroup/loadById</a></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">id: 4</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2下次执行时间"><a href="#8-2下次执行时间" class="headerlink" title="8.2下次执行时间"></a>8.2下次执行时间</h3><p>接口地址：/jobinfo/nextTriggerTime<br>测试环境：<a href="http://172.16.117.2:12380/xxl-job-admin/jobinfo/nextTriggerTime" target="_blank" rel="noopener">http://172.16.117.2:12380/xxl-job-admin/jobinfo/nextTriggerTime</a></p>
+<p>请求参数：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cron: 0 0 1 * * ?</span><br></pre></td></tr></table></figure>
+
+<h1 id="二、直接操作数据库方式新增"><a href="#二、直接操作数据库方式新增" class="headerlink" title="二、直接操作数据库方式新增"></a>二、直接操作数据库方式新增</h1><p>或者直接操作数据库表增加任务，</p>
+<p>任务表：xxl_job_info<br>执行器表：xxl_job_group</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 一下标星内容为必填项</span></span><br><span class="line"><span class="comment">-- * 商户名称</span></span><br><span class="line"><span class="keyword">SET</span> @groupName = <span class="string">'LQ科技'</span>;</span><br><span class="line"><span class="comment">-- * 商户ID</span></span><br><span class="line"><span class="keyword">SET</span> @groupID = <span class="string">'7282937789'</span>;</span><br><span class="line"><span class="comment">-- * 创建人</span></span><br><span class="line"><span class="keyword">SET</span> @author = <span class="string">'qianlei'</span>;</span><br><span class="line"><span class="comment">-- 报警邮件</span></span><br><span class="line"><span class="keyword">SET</span> @alarmEmail = <span class="string">'qianlei@sunlands.com'</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- * 执行器主键ID (xxl_job_group中主键)</span></span><br><span class="line"><span class="keyword">SET</span> @jobGroup = <span class="number">3</span>;</span><br><span class="line"><span class="comment">-- * 路由策略:(FIRST:第一个,LAST:最后一个,ROUND:轮询,RANDOM:随机,CONSISTENT_HASH:一致性HASH,LEAST_FREQUENTLY_USED:最不经常使用,LEAST_RECENTLY_USED:最近最久未使用,FAILOVER:故障转移,BUSYOVER:忙碌转移,SHARDING_BROADCAST:分片广播)</span></span><br><span class="line"><span class="keyword">SET</span> @executorRouteStrategy = <span class="string">'FIRST'</span>;</span><br><span class="line"><span class="comment">-- * 阻塞处理策略(SERIAL_EXECUTION:单机串行,DISCARD_LATER:丢弃后续调度,COVER_EARLY:覆盖之前调度)</span></span><br><span class="line"><span class="keyword">SET</span> @executorBlockStrategy = <span class="string">'SERIAL_EXECUTION'</span>;</span><br><span class="line"><span class="comment">-- * 运行模式(BEAN:BEAN,GLUE_GROOVY:GLUE(Java),GLUE_SHELL:GLUE(Shell),GLUE_PYTHON:GLUE(Python),GLUE_PHP:GLUE(PHP),GLUE_NODEJS:GLUE(Nodejs),GLUE_POWERSHELL:GLUE(PowerShell))</span></span><br><span class="line"><span class="keyword">SET</span> @glueType = <span class="string">'BEAN'</span>;</span><br><span class="line"><span class="comment">-- * 任务状态(1:开启，0关闭)</span></span><br><span class="line"><span class="keyword">SET</span> @triggerStatus = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">-- 创建job</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="string">`xxl_job_info`</span> (<span class="string">`job_group`</span>, <span class="string">`job_cron`</span>, <span class="string">`job_desc`</span>, <span class="string">`add_time`</span>, <span class="string">`update_time`</span>, <span class="string">`author`</span>, <span class="string">`alarm_email`</span>, <span class="string">`executor_route_strategy`</span>, <span class="string">`executor_handler`</span>, <span class="string">`executor_param`</span>, <span class="string">`executor_block_strategy`</span>, <span class="string">`executor_timeout`</span>, <span class="string">`executor_fail_retry_count`</span>, <span class="string">`glue_type`</span>, <span class="string">`glue_source`</span>, <span class="string">`glue_remark`</span>, <span class="string">`glue_updatetime`</span>, <span class="string">`child_jobid`</span>, <span class="string">`trigger_status`</span>, <span class="string">`trigger_last_time`</span>, <span class="string">`trigger_next_time`</span>) <span class="keyword">VALUES</span></span><br><span class="line">(@jobGroup, <span class="string">'0 0 1 * * ?'</span>, <span class="keyword">CONCAT</span>(<span class="string">'同步组织架构（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'syncOrganizationJobHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 0 1 * * ?'</span>, <span class="keyword">CONCAT</span>(<span class="string">'A-重新分配机会的定时任务（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'aRetryAllocateOpportunityHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 0 1 * * ?'</span>, <span class="keyword">CONCAT</span>(<span class="string">'B-重新分配机会的定时任务（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'bRetryAllocateOpportunityHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 0 1 * * ?'</span>, <span class="keyword">CONCAT</span>(<span class="string">'C-重新分配机会的定时任务（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'cRetryAllocateOpportunityHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 0/3 * * * ?'</span>, <span class="keyword">CONCAT</span>(<span class="string">'分配机会的定时任务（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'loopAllocateOpportunityHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 0 3 ? * *'</span>, <span class="keyword">CONCAT</span>(<span class="string">'回收机会定时任务（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'recycleOpportunityTaskHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 0/3 7-23 ? * *'</span>, <span class="keyword">CONCAT</span>(<span class="string">'话单同步（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'callRecordSynMinuteJobHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 10 * ? * *'</span>, <span class="keyword">CONCAT</span>(<span class="string">'每小时聚合微信聊天记录（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'wechatRecordHourMergeJobHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 0 2 ? * *'</span>, <span class="keyword">CONCAT</span>(<span class="string">'微信有效跟进统计（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'wechatValidFollowJobHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'30 0/5 * ? * *'</span>, <span class="keyword">CONCAT</span>(<span class="string">'增量更新机会es（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'compareCacheOppJobHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 0 5 ? * *'</span>, <span class="keyword">CONCAT</span>(<span class="string">'重建机会es（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'reindexCacheOppJobHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>),</span><br><span class="line">(@jobGroup, <span class="string">'0 10 0 * * ?'</span>, <span class="keyword">CONCAT</span>(<span class="string">'回收机会预警（'</span>,@groupName,<span class="string">'）'</span>), <span class="keyword">NOW</span>(), <span class="keyword">NOW</span>(), @author, @alarmEmail, @executorRouteStrategy, <span class="string">'recycleEarlyWarningHandler'</span>, @groupID, @executorBlockStrategy, <span class="number">0</span>, <span class="number">0</span>, @glueType, <span class="string">''</span>, <span class="string">'GLUE代码初始化'</span>, <span class="keyword">NOW</span>(), <span class="string">''</span>, @triggerStatus, <span class="number">0</span>, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/xxlJob/" rel="tag"># xxlJob</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/12/me-%E4%B8%AA%E4%BA%BA%E6%8A%95%E8%B5%84%E8%AF%BE/" rel="prev" title="个人投资课">
+      <i class="fa fa-chevron-left"></i> 个人投资课
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/14/me-%E4%B8%AD%E5%9B%BD%E8%B4%A2%E5%AF%8C%E6%8A%A5%E5%91%8A/" rel="next" title="中国财富报告">
+      中国财富报告 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#一、API-方式新增调度器"><span class="nav-number">1.</span> <span class="nav-text">一、API 方式新增调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-任务列表查询"><span class="nav-number">1.1.</span> <span class="nav-text">1.任务列表查询</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-任务新增"><span class="nav-number">1.2.</span> <span class="nav-text">2. 任务新增</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-任务更新"><span class="nav-number">1.3.</span> <span class="nav-text">3. 任务更新</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-任务删除"><span class="nav-number">1.4.</span> <span class="nav-text">4. 任务删除</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-任务启动"><span class="nav-number">1.5.</span> <span class="nav-text">5.任务启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-任务停止"><span class="nav-number">1.6.</span> <span class="nav-text">6.任务停止</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#7-任务触发"><span class="nav-number">1.7.</span> <span class="nav-text">7.任务触发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8-其他接口"><span class="nav-number">1.8.</span> <span class="nav-text">8.其他接口</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#8-1查询注册节点"><span class="nav-number">1.8.1.</span> <span class="nav-text">8.1查询注册节点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-2下次执行时间"><span class="nav-number">1.8.2.</span> <span class="nav-text">8.2下次执行时间</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#二、直接操作数据库方式新增"><span class="nav-number">2.</span> <span class="nav-text">二、直接操作数据库方式新增</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="钱磊"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">钱磊</p>
+  <div class="site-description" itemprop="description">早睡早起</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">54</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/onlinelei" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;onlinelei" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:suqianlei@gmail.com" title="E-Mail → mailto:suqianlei@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://twitter.com/suqianlei" title="Twitter → https:&#x2F;&#x2F;twitter.com&#x2F;suqianlei" rel="noopener" target="_blank"><i class="fab fa-twitter fa-fw"></i>Twitter</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2015 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">钱磊</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://suqianlei.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  var disqus_config = function() {
+    this.page.url = "http://suroot.win/2020/02/12/xxlJob-xxlJobAPI%E6%96%B0%E5%A2%9E%E8%B0%83%E5%BA%A6%E5%99%A8/";
+    this.page.identifier = "2020/02/12/xxlJob-xxlJobAPI新增调度器/";
+    this.page.title = "xxlJob:API 方式新增调度器";
+    };
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: disqus_config
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://suqianlei.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>
